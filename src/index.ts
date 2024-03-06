@@ -4,7 +4,7 @@ import "dotenv/config";
 import mongoose from "mongoose";
 import MyUserRoutes from "./routes/MyUserRoutes"
 
-const PORT = 7000;
+const PORT = process.env.PORT||7000;
 mongoose.connect(process.env.MONGODB_CONNECTION_STRING as string)
 .then(()=>console.log("db connection successful"));
 
