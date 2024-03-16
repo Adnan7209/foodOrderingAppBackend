@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { Request, Response } from "express";
 import Restuarant from "../models/Restaurant/restaurants";
 import { MenuItemType } from "../models/Restaurant/menuItem";
+import Order from "../models/order";
 
 const STRIPE = new Stripe(process.env.STRIPE_API_KEY as string);
 const FRONTENT_URL = process.env.FRONTEND_URL as string;
@@ -22,24 +23,33 @@ type CheckoutSessionRequestType = {
 };
 const createCheckoutSession = async (req: Request, res: Response) => {
   try {
-    const CheckoutSessionRequest: CheckoutSessionRequestType = req.body;
+    const checkoutSessionRequest: CheckoutSessionRequestType = req.body;
 
     const restaurant = await Restuarant.findById(
-      CheckoutSessionRequest.restaurantId
+      checkoutSessionRequest.restaurantId
     );
 
     if (!restaurant) {
       throw new Error("Restaurant not found");
     }
 
+    const newOrder = new Order({
+        restaurant:restaurant,
+        user:req.userId,
+        status:"placed",
+        deliveryDetails:checkoutSessionRequest.deliveryDetails,
+        cartItems:checkoutSessionRequest.cartItems,
+        createdAt: new Date(),
+    })
+
     const lineItems = createLineItems(
-      CheckoutSessionRequest,
+      checkoutSessionRequest,
       restaurant.menuItems
     );
 
     const session = await createSession(
       lineItems,
-      "TEST_ORDER_ID",
+      newOrder._id.toString(),
       restaurant.deliveryPrice,
       restaurant._id.toString()
     );
@@ -49,6 +59,7 @@ const createCheckoutSession = async (req: Request, res: Response) => {
         .status(500)
         .json({ message: "Error creating  stripe session" });
     }
+    await newOrder.save();
 
     res.json({ url: session.url });
   } catch (error: any) {
