@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const orderSchema = new mongoose.Schema({
     restaurant :{
         type:mongoose.Schema.Types.ObjectId,
-        ref:"Restuarant",
+        ref:"Restaurant",
     },
     user:{
         type:mongoose.Schema.Types.ObjectId,
