@@ -151,7 +151,7 @@ const stripeWebhookHandler = async (req: Request, res: Response) => {
     }
     order.totalAmount = event.data.object.amount_total
       ? event.data.object.amount_total / 100
-      : 0.00;
+      : 0.0;
     order.status = "paid";
     await order.save();
   }
@@ -159,4 +159,16 @@ const stripeWebhookHandler = async (req: Request, res: Response) => {
   res.status(200).send();
 };
 
-export { createCheckoutSession, stripeWebhookHandler };
+const getMyOrder = async (req: Request, res: Response) => {
+  try {
+    const orders = await Order.find({ user: req.userId })
+      .populate("restaurant")
+      .populate("user");
+    res.json(orders);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+export { createCheckoutSession, stripeWebhookHandler, getMyOrder };
